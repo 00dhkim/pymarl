@@ -1,0 +1,366 @@
+[INFO 06:43:28] pymarl Running command 'my_main'
+[INFO 06:43:28] pymarl Started run with ID "28"
+[DEBUG 06:43:28] pymarl Starting Heartbeat
+[DEBUG 06:43:28] my_main Started
+[WARNING 06:43:28] my_main CUDA flag use_cuda was switched OFF automatically because no CUDA devices are available!
+[INFO 06:43:28] my_main Experiment Parameters:
+[INFO 06:43:28] my_main 
+
+{   'action_selector': 'epsilon_greedy',
+    'agent': 'rnn',
+    'agent_output_type': 'q',
+    'batch_size': 32,
+    'batch_size_run': 1,
+    'buffer_cpu_only': True,
+    'buffer_size': 5000,
+    'checkpoint_path': '',
+    'critic_lr': 0.0005,
+    'double_q': True,
+    'env': 'sc2',
+    'env_args': {   'continuing_episode': False,
+                    'debug': False,
+                    'difficulty': '7',
+                    'game_version': None,
+                    'heuristic_ai': False,
+                    'heuristic_rest': False,
+                    'map_name': '2s3z',
+                    'move_amount': 2,
+                    'obs_all_health': True,
+                    'obs_instead_of_state': False,
+                    'obs_last_action': False,
+                    'obs_own_health': True,
+                    'obs_pathing_grid': False,
+                    'obs_terrain_height': False,
+                    'obs_timestep_number': False,
+                    'replay_dir': '',
+                    'replay_prefix': '',
+                    'reward_death_value': 10,
+                    'reward_defeat': 0,
+                    'reward_negative_scale': 0.5,
+                    'reward_only_positive': True,
+                    'reward_scale': True,
+                    'reward_scale_rate': 20,
+                    'reward_sparse': False,
+                    'reward_win': 200,
+                    'seed': 932490968,
+                    'state_last_action': True,
+                    'state_timestep_number': False,
+                    'step_mul': 8},
+    'epsilon_anneal_time': 50000,
+    'epsilon_finish': 0.05,
+    'epsilon_start': 1.0,
+    'evaluate': False,
+    'gamma': 0.99,
+    'grad_norm_clip': 10,
+    'hypernet_embed': 64,
+    'hypernet_layers': 2,
+    'label': 'default_label',
+    'learner': 'q_learner',
+    'learner_log_interval': 10000,
+    'load_step': 0,
+    'local_results_path': 'results',
+    'log_interval': 10000,
+    'lr': 0.0005,
+    'mac': 'basic_mac',
+    'mixer': 'qmix',
+    'mixing_embed_dim': 32,
+    'name': 'qmix',
+    'obs_agent_id': True,
+    'obs_last_action': True,
+    'optim_alpha': 0.99,
+    'optim_eps': 1e-05,
+    'repeat_id': 1,
+    'rnn_hidden_dim': 64,
+    'runner': 'sisr',
+    'runner_log_interval': 10000,
+    'save_model': False,
+    'save_model_interval': 2000000,
+    'save_replay': False,
+    'seed': 932490968,
+    't_max': 2050000,
+    'target_update_interval': 200,
+    'test_greedy': True,
+    'test_interval': 10000,
+    'test_nepisode': 32,
+    'use_cuda': False,
+    'use_tensorboard': False}
+
+DOHYUN DEBUG: episode count: 0 12368
+DOHYUN DEBUG: episode count: 0 12369
+[INFO 06:43:28] absl Launching SC2: /workspace/pymarl/3rdparty/StarCraftII/Versions/Base75689/SC2_x64 -listen 127.0.0.1 -port 37303 -dataDir /workspace/pymarl/3rdparty/StarCraftII/ -tempDir /tmp/sc-l8x6e7bp/
+[INFO 06:43:28] absl Launching SC2: /workspace/pymarl/3rdparty/StarCraftII/Versions/Base75689/SC2_x64 -listen 127.0.0.1 -port 38233 -dataDir /workspace/pymarl/3rdparty/StarCraftII/ -tempDir /tmp/sc-hqxloi54/
+[INFO 06:43:28] absl Connecting to: ws://127.0.0.1:38233/sc2api, attempt: 0, running: True
+[INFO 06:43:28] absl Connecting to: ws://127.0.0.1:37303/sc2api, attempt: 0, running: True
+Version: B75689 (SC2.4.10)
+Build: Aug 12 2019 17:16:57
+Command Line: '"/workspace/pymarl/3rdparty/StarCraftII/Versions/Base75689/SC2_x64" -listen 127.0.0.1 -port 38233 -dataDir /workspace/pymarl/3rdparty/StarCraftII/ -tempDir /tmp/sc-hqxloi54/'
+Version: B75689 (SC2.4.10)
+Build: Aug 12 2019 17:16:57
+Command Line: '"/workspace/pymarl/3rdparty/StarCraftII/Versions/Base75689/SC2_x64" -listen 127.0.0.1 -port 37303 -dataDir /workspace/pymarl/3rdparty/StarCraftII/ -tempDir /tmp/sc-l8x6e7bp/'
+Starting up...
+Starting up...
+Startup Phase 1 complete
+Startup Phase 1 complete
+[INFO 06:43:29] absl Connecting to: ws://127.0.0.1:38233/sc2api, attempt: 1, running: True
+[INFO 06:43:29] absl Connecting to: ws://127.0.0.1:37303/sc2api, attempt: 1, running: True
+[INFO 06:43:30] absl Connecting to: ws://127.0.0.1:37303/sc2api, attempt: 2, running: True
+[INFO 06:43:30] absl Connecting to: ws://127.0.0.1:38233/sc2api, attempt: 2, running: True
+[INFO 06:43:31] absl Connecting to: ws://127.0.0.1:37303/sc2api, attempt: 3, running: True
+[INFO 06:43:31] absl Connecting to: ws://127.0.0.1:38233/sc2api, attempt: 3, running: True
+Startup Phase 2 complete
+Creating stub renderer...
+Startup Phase 2 complete
+Creating stub renderer...
+Listening on: 127.0.0.1:37303
+Listening on: 127.0.0.1:38233
+Startup Phase 3 complete. Ready for commands.
+Startup Phase 3 complete. Ready for commands.
+[INFO 06:43:32] absl Connecting to: ws://127.0.0.1:37303/sc2api, attempt: 4, running: True
+[INFO 06:43:32] absl Connecting to: ws://127.0.0.1:38233/sc2api, attempt: 4, running: True
+ConnectHandler: Request from 127.0.0.1:46540 accepted
+ConnectHandler: Request from 127.0.0.1:33188 accepted
+ReadyHandler: 127.0.0.1:33188 ready
+ReadyHandler: 127.0.0.1:46540 ready
+Requesting to join a single player game
+Configuring interface options
+Configure: raw interface enabled
+Configure: feature layer interface disabled
+Configure: score interface disabled
+Configure: render interface disabled
+Launching next game.
+Requesting to join a single player game
+Configuring interface options
+Configure: raw interface enabled
+Configure: feature layer interface disabled
+Configure: score interface disabled
+Configure: render interface disabled
+Launching next game.
+Next launch phase started: 2
+Next launch phase started: 3
+Next launch phase started: 4
+Next launch phase started: 5
+Next launch phase started: 2
+Next launch phase started: 6
+Next launch phase started: 3
+Next launch phase started: 7
+Next launch phase started: 8
+Next launch phase started: 4
+Next launch phase started: 5
+Next launch phase started: 6
+Next launch phase started: 7
+Next launch phase started: 8
+Game has started.
+Using default stable ids, none found at: /workspace/pymarl/3rdparty/StarCraftII/stableid.json
+Successfully loaded stable ids: GameData\stableid.json
+Sending ResponseJoinGame
+Game has started.
+Using default stable ids, none found at: /workspace/pymarl/3rdparty/StarCraftII/stableid.json
+Successfully loaded stable ids: GameData\stableid.json
+Sending ResponseJoinGame
+[INFO 06:43:38] my_main Beginning training for 2050000 timesteps
+DOHYUN DEBUG: episode count: 0 12369
+[INFO 06:43:38] absl Launching SC2: /workspace/pymarl/3rdparty/StarCraftII/Versions/Base75689/SC2_x64 -listen 127.0.0.1 -port 41153 -dataDir /workspace/pymarl/3rdparty/StarCraftII/ -tempDir /tmp/sc-ia4z754q/
+[INFO 06:43:38] absl Connecting to: ws://127.0.0.1:41153/sc2api, attempt: 0, running: True
+Version: B75689 (SC2.4.10)
+Build: Aug 12 2019 17:16:57
+Command Line: '"/workspace/pymarl/3rdparty/StarCraftII/Versions/Base75689/SC2_x64" -listen 127.0.0.1 -port 41153 -dataDir /workspace/pymarl/3rdparty/StarCraftII/ -tempDir /tmp/sc-ia4z754q/'
+Starting up...
+Startup Phase 1 complete
+[INFO 06:43:39] absl Connecting to: ws://127.0.0.1:41153/sc2api, attempt: 1, running: True
+[INFO 06:43:40] absl Connecting to: ws://127.0.0.1:41153/sc2api, attempt: 2, running: True
+[INFO 06:43:41] absl Connecting to: ws://127.0.0.1:41153/sc2api, attempt: 3, running: True
+Startup Phase 2 complete
+Creating stub renderer...
+Listening on: 127.0.0.1:41153
+Startup Phase 3 complete. Ready for commands.
+[INFO 06:43:42] absl Connecting to: ws://127.0.0.1:41153/sc2api, attempt: 4, running: True
+ConnectHandler: Request from 127.0.0.1:43480 accepted
+ReadyHandler: 127.0.0.1:43480 ready
+DataHandler: unable to parse websocket frame.
+CloseHandler: 127.0.0.1:33188 disconnected
+[INFO 06:43:42] absl Shutdown gracefully.
+[INFO 06:43:42] absl Shutdown with return code: -15
+Requesting to join a single player game
+Configuring interface options
+Configure: raw interface enabled
+Configure: feature layer interface disabled
+Configure: score interface disabled
+Configure: render interface disabled
+Launching next game.
+Next launch phase started: 2
+Next launch phase started: 3
+Next launch phase started: 4
+Next launch phase started: 5
+Next launch phase started: 6
+Next launch phase started: 7
+Next launch phase started: 8
+Game has started.
+Using default stable ids, none found at: /workspace/pymarl/3rdparty/StarCraftII/stableid.json
+Successfully loaded stable ids: GameData\stableid.json
+Sending ResponseJoinGame
+/workspace/pymarl/src/components/episode_buffer.py:103: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at ../torch/csrc/utils/tensor_new.cpp:261.)
+  v = th.tensor(v, dtype=dtype, device=self.device)
+/workspace/pymarl/src/components/episode_buffer.py:103: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  v = th.tensor(v, dtype=dtype, device=self.device)
+[INFO 06:43:48] my_main t_env: 49 / 2050000
+[INFO 06:43:48] my_main Estimated time left: 33 minutes, 8 seconds. Time passed: 9 seconds
+DOHYUN DEBUG: episode count: 0 12368
+[INFO 06:43:48] absl Launching SC2: /workspace/pymarl/3rdparty/StarCraftII/Versions/Base75689/SC2_x64 -listen 127.0.0.1 -port 41601 -dataDir /workspace/pymarl/3rdparty/StarCraftII/ -tempDir /tmp/sc-3aa9pbm6/
+[INFO 06:43:48] absl Connecting to: ws://127.0.0.1:41601/sc2api, attempt: 0, running: True
+Version: B75689 (SC2.4.10)
+Build: Aug 12 2019 17:16:57
+Command Line: '"/workspace/pymarl/3rdparty/StarCraftII/Versions/Base75689/SC2_x64" -listen 127.0.0.1 -port 41601 -dataDir /workspace/pymarl/3rdparty/StarCraftII/ -tempDir /tmp/sc-3aa9pbm6/'
+Starting up...
+Startup Phase 1 complete
+[INFO 06:43:49] absl Connecting to: ws://127.0.0.1:41601/sc2api, attempt: 1, running: True
+[INFO 06:43:50] absl Connecting to: ws://127.0.0.1:41601/sc2api, attempt: 2, running: True
+[INFO 06:43:51] absl Connecting to: ws://127.0.0.1:41601/sc2api, attempt: 3, running: True
+Startup Phase 2 complete
+Creating stub renderer...
+Listening on: 127.0.0.1:41601
+Startup Phase 3 complete. Ready for commands.
+[INFO 06:43:52] absl Connecting to: ws://127.0.0.1:41601/sc2api, attempt: 4, running: True
+ConnectHandler: Request from 127.0.0.1:57738 accepted
+ReadyHandler: 127.0.0.1:57738 ready
+DataHandler: unable to parse websocket frame.
+RequestQuit command received.
+CloseHandler: 127.0.0.1:46540 disconnected
+Closing Application...
+ResponseThread: No connection, dropping the response.
+[INFO 06:43:52] absl Shutdown gracefully.
+[INFO 06:43:52] absl Shutdown with return code: -15
+Requesting to join a single player game
+Configuring interface options
+Configure: raw interface enabled
+Configure: feature layer interface disabled
+Configure: score interface disabled
+Configure: render interface disabled
+Launching next game.
+Next launch phase started: 2
+Next launch phase started: 3
+Next launch phase started: 4
+Next launch phase started: 5
+Next launch phase started: 6
+Next launch phase started: 7
+Next launch phase started: 8
+Game has started.
+Using default stable ids, none found at: /workspace/pymarl/3rdparty/StarCraftII/stableid.json
+Successfully loaded stable ids: GameData\stableid.json
+Sending ResponseJoinGame
+DOHYUN DEBUG: episode count: 1 12368
+DOHYUN DEBUG: episode count: 2 12368
+DOHYUN DEBUG: episode count: 3 12368
+DOHYUN DEBUG: episode count: 4 12368
+DOHYUN DEBUG: episode count: 5 12368
+DOHYUN DEBUG: episode count: 6 12368
+DOHYUN DEBUG: episode count: 7 12368
+DOHYUN DEBUG: episode count: 8 12368
+DOHYUN DEBUG: episode count: 9 12368
+DOHYUN DEBUG: episode count: 10 12368
+DOHYUN DEBUG: episode count: 11 12368
+DOHYUN DEBUG: episode count: 12 12368
+DOHYUN DEBUG: episode count: 13 12368
+DOHYUN DEBUG: episode count: 14 12368
+DOHYUN DEBUG: episode count: 15 12368
+DOHYUN DEBUG: episode count: 16 12368
+DOHYUN DEBUG: episode count: 17 12368
+DOHYUN DEBUG: episode count: 18 12368
+DOHYUN DEBUG: episode count: 19 12368
+DOHYUN DEBUG: episode count: 20 12368
+DOHYUN DEBUG: episode count: 21 12368
+DOHYUN DEBUG: episode count: 22 12368
+DOHYUN DEBUG: episode count: 23 12368
+DOHYUN DEBUG: episode count: 24 12368
+DOHYUN DEBUG: episode count: 25 12368
+DOHYUN DEBUG: episode count: 26 12368
+DOHYUN DEBUG: episode count: 27 12368
+DOHYUN DEBUG: episode count: 28 12368
+DOHYUN DEBUG: episode count: 29 12368
+DOHYUN DEBUG: episode count: 30 12368
+DOHYUN DEBUG: episode count: 31 12368
+DOHYUN DEBUG: episode count: 1 12369
+DOHYUN DEBUG: episode count: 2 12369
+DOHYUN DEBUG: episode count: 32 12368
+DOHYUN DEBUG: episode count: 33 12368
+DOHYUN DEBUG: episode count: 3 12369
+DOHYUN DEBUG: episode count: 34 12368
+DOHYUN DEBUG: episode count: 4 12369
+DOHYUN DEBUG: episode count: 5 12369
+DOHYUN DEBUG: episode count: 6 12369
+DOHYUN DEBUG: episode count: 7 12369
+DOHYUN DEBUG: episode count: 35 12368
+DOHYUN DEBUG: episode count: 8 12369
+DOHYUN DEBUG: episode count: 9 12369
+DOHYUN DEBUG: episode count: 10 12369
+DOHYUN DEBUG: episode count: 11 12369
+DOHYUN DEBUG: episode count: 12 12369
+DOHYUN DEBUG: episode count: 13 12369
+DOHYUN DEBUG: episode count: 36 12368
+DOHYUN DEBUG: episode count: 14 12369
+DOHYUN DEBUG: episode count: 15 12369
+DOHYUN DEBUG: episode count: 16 12369
+DOHYUN DEBUG: episode count: 17 12369
+DOHYUN DEBUG: episode count: 18 12369
+DOHYUN DEBUG: episode count: 19 12369
+DOHYUN DEBUG: episode count: 20 12369
+DOHYUN DEBUG: episode count: 21 12369
+DOHYUN DEBUG: episode count: 22 12369
+DOHYUN DEBUG: episode count: 23 12369
+DOHYUN DEBUG: episode count: 24 12369
+DOHYUN DEBUG: episode count: 25 12369
+DOHYUN DEBUG: episode count: 26 12369
+DOHYUN DEBUG: episode count: 27 12369
+DOHYUN DEBUG: episode count: 28 12369
+DOHYUN DEBUG: episode count: 29 12369
+DOHYUN DEBUG: episode count: 30 12369
+DOHYUN DEBUG: episode count: 31 12369
+DOHYUN DEBUG: episode count: 32 12369
+DOHYUN DEBUG: episode count: 33 12369
+DOHYUN DEBUG: episode count: 34 12369
+DOHYUN DEBUG: episode count: 35 12369
+DOHYUN DEBUG: episode count: 37 12368
+DOHYUN DEBUG: episode count: 36 12369
+DOHYUN DEBUG: episode count: 37 12369
+DOHYUN DEBUG: episode count: 38 12369
+DOHYUN DEBUG: episode count: 39 12369
+DOHYUN DEBUG: episode count: 38 12368
+DOHYUN DEBUG: episode count: 40 12369
+DOHYUN DEBUG: episode count: 39 12368
+DOHYUN DEBUG: episode count: 41 12369
+DOHYUN DEBUG: episode count: 42 12369
+DOHYUN DEBUG: episode count: 43 12369
+DOHYUN DEBUG: episode count: 44 12369
+DOHYUN DEBUG: episode count: 45 12369
+DOHYUN DEBUG: episode count: 46 12369
+DOHYUN DEBUG: episode count: 47 12369
+DOHYUN DEBUG: episode count: 48 12369
+DOHYUN DEBUG: episode count: 49 12369
+DOHYUN DEBUG: episode count: 50 12369
+DOHYUN DEBUG: episode count: 51 12369
+DOHYUN DEBUG: episode count: 52 12369
+DOHYUN DEBUG: episode count: 53 12369
+DOHYUN DEBUG: episode count: 54 12369
+DOHYUN DEBUG: episode count: 55 12369
+DOHYUN DEBUG: episode count: 56 12369
+DOHYUN DEBUG: episode count: 57 12369
+DOHYUN DEBUG: episode count: 58 12369
+DOHYUN DEBUG: episode count: 40 12368
+DOHYUN DEBUG: episode count: 59 12369
+DOHYUN DEBUG: episode count: 60 12369
+DOHYUN DEBUG: episode count: 61 12369
+DOHYUN DEBUG: episode count: 62 12369
+DOHYUN DEBUG: episode count: 63 12369
+DOHYUN DEBUG: episode count: 64 12369
+DOHYUN DEBUG: episode count: 65 12369
+DOHYUN DEBUG: episode count: 66 12369
+DOHYUN DEBUG: episode count: 67 12369
+DOHYUN DEBUG: episode count: 68 12369
+DOHYUN DEBUG: episode count: 41 12368
+DOHYUN DEBUG: episode count: 69 12369
+DOHYUN DEBUG: episode count: 70 12369
+DOHYUN DEBUG: episode count: 71 12369
+DOHYUN DEBUG: episode count: 72 12369
+DOHYUN DEBUG: episode count: 73 12369
+DOHYUN DEBUG: episode count: 74 12369
+DOHYUN DEBUG: episode count: 75 12369
+DOHYUN DEBUG: episode count: 76 12369
