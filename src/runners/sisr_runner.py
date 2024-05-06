@@ -215,13 +215,13 @@ class SISRRunner:
         parent_conn.send(("get_timesteps", None))
         total_steps, episode_count = parent_conn.recv()
         
-        other_parent_conn.send(("get_timesteps", None)) # debug
-        other_total_steps, other_episode_count = other_parent_conn.recv() # debug
-        if other_total_steps + self.env_steps_this_run != total_steps: # debug
-            print('other_total_steps', other_total_steps)
-            print('self.env_steps_this_run', self.env_steps_this_run)
-            print('total_steps', total_steps)
-            assert False
+        # other_parent_conn.send(("get_timesteps", None)) # debug
+        # other_total_steps, other_episode_count = other_parent_conn.recv() # debug
+        # if other_total_steps + episode_lengths[idx] != total_steps: # debug
+        #     print('other_total_steps', other_total_steps)
+        #     print('episode_lengths[idx]', episode_lengths[idx])
+        #     print('total_steps', total_steps)
+        #     assert False
         
         other_parent_conn.send(("set_timesteps", (total_steps, episode_count)))
         

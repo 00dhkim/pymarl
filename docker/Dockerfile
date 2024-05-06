@@ -45,7 +45,7 @@ RUN pip3 install torch
 RUN pip3 install torchvision snakeviz pytest probscale
 
 ## -- SMAC
-RUN pip3 install git+https://github.com/oxwhirl/smac.git
-ENV SC2PATH /pymarl/3rdparty/StarCraftII
+RUN pip3 install git+https://github.com/00dhkim/smac.git
+ENV SC2PATH /workspace/pymarl/3rdparty/StarCraftII
 
 WORKDIR /pymarl
