@@ -12,13 +12,13 @@ runner는 각 sc2 환경들의 최적 액션들을 선택해서 쭉 뿌려줌.
 # 구현 노트
 일단 확률적으로 랜덤 스폰되도록 구현은 했음
 
-[] 각 worker마다 랜덤 여/부 맵 적용하기
-[] 구현한 코드에 컴파일 에러는 없는지, 한번에 하나의 worker만 실행되는지
-[] 각 worker가 활성화되었을 때 올바른지 (랜덤일때 진짜 랜덤인지, 원본일떄 진짜 원본인지)
-[] 구현한 코드에 문제없는지 테스트 코드 작성 (유닛들 초기 위치 로깅)
+[v] 구현한 코드에 컴파일 에러는 없는지, 한번에 하나의 worker만 실행되는지
+[v] 각 worker마다 랜덤 여/부 맵 적용하기
+[v] 각 worker가 활성화되었을 때 올바른지 (랜덤일때 진짜 랜덤인지, 원본일때 진짜 원본인지) 테스트 코드 작성 (유닛들 초기 위치 로깅)
 
 '''
 
+import copy
 from envs import REGISTRY as env_REGISTRY
 from functools import partial
 from components.episode_buffer import EpisodeBatch
@@ -43,16 +43,23 @@ class SISRRunner:
         env_fn = env_REGISTRY[self.args.env]
         # self.ps[0] 는 origin worker
         # self.ps[1] 는 random worker
-        self.ps = [Process(target=env_worker, args=(worker_conn, CloudpickleWrapper(partial(env_fn, **self.args.env_args))))
-                            for worker_conn in self.worker_conns]
+        # self.ps = [Process(target=env_worker, args=(worker_conn, CloudpickleWrapper(partial(env_fn, **self.args.env_args))))
+        #                     for worker_conn in self.worker_conns]
+        env_args_random_map = copy.copy(self.args.env_args)
+        env_args_random_map['map_name'] += '_random'
         
+        ps_origin = Process(target=env_worker, args=(self.worker_conns[0], CloudpickleWrapper(partial(env_fn, **self.args.env_args))))
+        ps_random = Process(target=env_worker, args=(self.worker_conns[1], CloudpickleWrapper(partial(env_fn, **env_args_random_map))))
+        self.ps = [ps_origin, ps_random]
         
         self.random_worker_runned = True
 
         for p in self.ps:
             p.daemon = True
             p.start()
-
+        print('origin worker', ps_origin.pid)
+        print('random worker', ps_random.pid)
+        
         self.parent_conns[0].send(("get_env_info", None))
         self.env_info = self.parent_conns[0].recv()
         self.episode_limit = self.env_info["episode_limit"]
@@ -71,7 +78,7 @@ class SISRRunner:
         for parent_conn in self.parent_conns:
             parent_conn.send(("reset", None))
         for parent_conn in self.parent_conns:
-            _ = parent_conn.recv() # clear buffer
+            data = parent_conn.recv() # clear buffer
 
     def setup(self, scheme, groups, preprocess, mac):
         self.new_batch = partial(EpisodeBatch, scheme, groups, self.batch_size, self.episode_limit + 1,
@@ -113,6 +120,8 @@ class SISRRunner:
         pre_transition_data["state"].append(data["state"])
         pre_transition_data["avail_actions"].append(data["avail_actions"])
         pre_transition_data["obs"].append(data["obs"])
+        
+        parent_conn.send(("test_random_spawn", None))
 
         self.batch.update(pre_transition_data, ts=0)
 
@@ -305,11 +314,14 @@ def env_worker(remote, env_fn):
             remote.send(env.get_env_info())
         elif cmd == "get_stats":
             remote.send(env.get_stats())
+        ###########
         elif cmd == "get_timesteps":
             remote.send(env.get_timesteps())
         elif cmd == "set_timesteps":
             total_steps, episode_count = data
             env.set_timesteps(total_steps, episode_count)
+        elif cmd == "test_random_spawn":
+            env.test_random_spawn()
         else:
             raise NotImplementedError
 
