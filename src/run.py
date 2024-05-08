@@ -164,11 +164,11 @@ def run_sequential(args, logger):
     while runner.t_env <= args.t_max:
 
         # stochastic initial states randomization (SISR)
-        
-        if random.uniform(0, 1) > 0.1: #TODO: update with epsilon and alpha
-            random_spawn = True
+        epsilon = mac.action_selector.schedule.eval(runner.t_env)
+        if random.uniform(0, 1) < epsilon * args.sisr_alpha:
+            random_spawn = True # random
         else:
-            random_spawn = False
+            random_spawn = False # origin
         
         # Run for a whole episode at a time
         episode_batch = runner.run(test_mode=False, random_spawn=random_spawn)

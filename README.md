@@ -21,6 +21,7 @@ Build the Dockerfile using
 ```shell
 cd docker
 bash build.sh
+docker run --name pymarl_1.0 -v ~/workspace:/workspace --gpus all -it pymarl:1.0 /bin/bash
 ```
 
 Set up StarCraft II and SMAC:
@@ -40,7 +41,7 @@ pip3 install git+https://github.com/00dhkim/smac.git
 echo 'export SC2PATH=/workspace/pymarl/3rdparty/StarCraftII' >> ~/.bashrc
 source ~/.bashrc
 
-python3 src/main.py --config=qmix --env-config=sc2 with env_args.map_name=2s3z runner=sisr
+python3 src/main.py --config=qmix --env-config=sc2 with env_args.map_name=10m_vs_11m runner=sisr t_max=50050000
 ```
 
 The config files act as defaults for an algorithm or environment. 

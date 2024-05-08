@@ -121,7 +121,8 @@ class SISRRunner:
         pre_transition_data["avail_actions"].append(data["avail_actions"])
         pre_transition_data["obs"].append(data["obs"])
         
-        parent_conn.send(("test_random_spawn", None))
+        # for testing
+        # parent_conn.send(("test_random_spawn", None))
 
         self.batch.update(pre_transition_data, ts=0)
 
@@ -129,6 +130,8 @@ class SISRRunner:
         self.env_steps_this_run = 0
 
     def run(self, test_mode=False, random_spawn=False):
+        if test_mode:
+            random_spawn = False
         self.reset(random_spawn=random_spawn)
 
         if not random_spawn:
