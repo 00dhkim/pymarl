@@ -41,7 +41,7 @@ pip3 install git+https://github.com/00dhkim/smac.git
 echo 'export SC2PATH=/workspace/pymarl/3rdparty/StarCraftII' >> ~/.bashrc
 source ~/.bashrc
 
-python3 src/main.py --config=qmix --env-config=sc2 with env_args.map_name=10m_vs_11m runner=sisr t_max=50050000
+python3 src/main.py --config=qmix --env-config=sc2 with env_args.map_name=3s5z runner=sisr t_max=5005000 sisr_alpha=0.1 name=qmix_alpha0.1
 ```
 
 The config files act as defaults for an algorithm or environment. 
