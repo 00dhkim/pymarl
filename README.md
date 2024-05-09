@@ -106,3 +106,16 @@ In BibTeX format:
 ## License
 
 Code licensed under the Apache License v2.0
+
+
+## research notes
+
+state, obs, action 3 개의 차원 바꾸면 됨
+action은 적의 개수만큼 action의 차원이 결정되기에 필요함.
+hard coding으로 변경하는 것으로 차원을 맞추자.
+
+3s5z -> 3s5z_vs_3s6z의 경우, 적만 하나 늘어남
+27m_vs_27m -> 27m_vs_30m 새롭게 만들어서, 적만 늘이자
+
+  아군의 개수를 늘이면 mix net의 구조가 바뀌기 때문에, 아군의 개수는 고정
+  아군의 개수가 변하려게 하면 from few to more 논문의 DyMA-CL 모델 사용하면 되긴 하나, 본 연구의 주제와는 별개임. (이 연구는 랜덤스폰이 전이학습의 robustness를 향상시킨다는 연구임)
