@@ -2,6 +2,7 @@ from collections import defaultdict
 import logging
 import numpy as np
 import torch as th
+import time
 
 class Logger:
     def __init__(self, console_logger):
@@ -10,6 +11,7 @@ class Logger:
         self.use_tb = False
         self.use_sacred = False
         self.use_hdf = False
+        self.last_print_time = time.time()
 
         self.stats = defaultdict(lambda: [])
 
@@ -39,7 +41,8 @@ class Logger:
                 self.sacred_info[key] = [value]
 
     def print_recent_stats(self):
-        log_str = "Recent Stats | t_env: {:>10} | Episode: {:>8}\n".format(*self.stats["episode"][-1])
+        time_now = time.time()
+        log_str = "Recent Stats | t_env: {:>10} | Episode: {:>8} | {:.2f} sec\n".format(*self.stats["episode"][-1], time_now - self.last_print_time)
         i = 0
         for (k, v) in sorted(self.stats.items()):
             if k == "episode":
@@ -47,10 +50,11 @@ class Logger:
             i += 1
             window = 5 if k != "epsilon" else 1
             item = "{:.4f}".format(th.mean(th.tensor([x[1] for x in self.stats[k][-window:]]))) # kimdohyun
-            # item = "{:.4f}".format(np.mean([x[1] for x in self.stats[k][-window:]])) #TODO: ERROR occupied by kimdohyun
+            # item = "{:.4f}".format(np.mean([x[1] for x in self.stats[k][-window:]])) # ERROR occupied by kimdohyun
             log_str += "{:<25}{:>8}".format(k + ":", item)
             log_str += "\n" if i % 4 == 0 else "\t"
         self.console_logger.info(log_str)
+        self.last_print_time = time_now
 
 
 # set up a custom logger

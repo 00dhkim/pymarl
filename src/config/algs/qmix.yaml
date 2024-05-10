@@ -6,6 +6,11 @@ epsilon_start: 1.0
 epsilon_finish: 0.05
 epsilon_anneal_time: 50000
 
+## Conservative epsilon-greedy; start from 550k, duration: 50k, start: 0.5, finish: 0.05
+# epsilon_start: 5.0
+# epsilon_finish: 0.05
+# epsilon_anneal_time: 550000
+
 runner: "episode"
 
 buffer_size: 5000
