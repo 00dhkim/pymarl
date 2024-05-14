@@ -4,6 +4,7 @@ import pprint
 import random
 import time
 import threading
+import numpy as np
 import torch as th
 from types import SimpleNamespace as SN
 from utils.logging import Logger
@@ -35,7 +36,7 @@ def run(_run, _config, _log):
     _log.info("\n\n" + experiment_params + "\n")
 
     # configure tensorboard logger
-    unique_token = "{}__{}__{}".format(args.name, args.env_args["map_name"], datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+    unique_token = "{}_{}__{}__{}__{}_{}".format(args.name, args.sisr_alpha, args.env_args["map_name"], datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), args.checkpoint_path, args.load_step)
     args.unique_token = unique_token
     if args.use_tensorboard:
         tb_logs_direc = os.path.join(dirname(dirname(abspath(__file__))), "results", "tb_logs")
@@ -163,15 +164,18 @@ def run_sequential(args, logger):
 
     while runner.t_env <= args.t_max:
 
-        # stochastic initial states randomization (SISR)
-        epsilon = mac.action_selector.schedule.eval(runner.t_env)
-        if random.uniform(0, 1) < epsilon * args.sisr_alpha:
-            random_spawn = True # random
-        else:
-            random_spawn = False # origin
+        # # stochastic initial states randomization (SISR)
+        # epsilon = mac.action_selector.schedule.eval(runner.t_env)
+        # if random.uniform(0, 1) < epsilon * args.sisr_alpha:
+        #     random_spawn = True # random
+        # else:
+        #     random_spawn = False # origin
+        assert args.runner == 'random_episode' # NR 실험중이기 때문
+        
+        clean_flag = np.random.rand(1)[0] > args.nr_alpha
         
         # Run for a whole episode at a time
-        episode_batch = runner.run(test_mode=False, random_spawn=random_spawn)
+        episode_batch = runner.run(test_mode=False, clean_flag=clean_flag)
         buffer.insert_episode_batch(episode_batch)
 
         if buffer.can_sample(args.batch_size):
@@ -184,7 +188,7 @@ def run_sequential(args, logger):
             if episode_sample.device != args.device:
                 episode_sample.to(args.device)
 
-            learner.train(episode_sample, runner.t_env, episode)
+            learner.train(episode_sample, runner.t_env, episode, clean_flag=clean_flag)
 
         # Execute test runs once in a while
         n_test_runs = max(1, args.test_nepisode // runner.batch_size)
