@@ -11,3 +11,6 @@ REGISTRY["sisr"] = SISRRunner
 
 from .random_episode_runner import RandomEpisodeRunner
 REGISTRY["random_episode"] = RandomEpisodeRunner
+
+from .enr_episode_runner import ENREpisodeRunner
+REGISTRY["enr_episode"] = ENREpisodeRunner

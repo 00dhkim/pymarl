@@ -1,0 +1,49 @@
+# --- QMIX specific parameters ---
+
+# use epsilon greedy action selector
+action_selector: "epsilon_greedy"
+epsilon_start: 1.0
+epsilon_finish: 0.05
+epsilon_anneal_time: 50000
+
+## Conservative epsilon-greedy; start from 550k, duration: 50k, start: 0.5, finish: 0.05
+# epsilon_start: 5.0
+# epsilon_finish: 0.05
+# epsilon_anneal_time: 550000
+
+buffer_size: 5000
+
+# update the target network every {} episodes
+target_update_interval: 200
+
+# use the Q_Learner to train
+agent_output_type: "q"
+double_q: True
+mixer: "qmix"
+mixing_embed_dim: 32
+hypernet_layers: 2
+hypernet_embed: 64
+
+name: "qmix"
+
+# ensembled network randomization
+runner: "enr_episode"
+mac: "enr_mac"
+agent: "enr_rnn"
+learner: "random_q_learner"
+
+nr_alpha: 0.1 # network randomization (clean_flag) coef; 0 is fully clean path; 1.0 is fully random path
+nr_beta: 0.002 # fm_loss coef
+n_ensemble: 10
+
+
+# [v] random layer (clean, random path 각각)
+# [v] 에피소드마다 random layer 초기화
+# [v] alpha에 따라 clean_flag on/off (에피소드마다 flag sampling)
+# [v] loss에 fm_loss 추가
+# [v] hidden feature 버퍼에 저장
+# [v] register 적용한 .yaml config 파일 생성 및 적용
+# 
+# 학습 단계에서 clean_path, random_path 둘다 forward pass 해서 action, hidden 취하되, 리턴할 때 clean_flag에 따라 한쪽 값만 리턴. hidden은 저장은 함.
+# 
+# h, clean_h 값은 모든 step에 대해 취함. 논문 상 s_t in D로 표기되어있음.

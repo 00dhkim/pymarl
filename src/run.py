@@ -164,19 +164,30 @@ def run_sequential(args, logger):
 
     while runner.t_env <= args.t_max:
 
-        # # stochastic initial states randomization (SISR)
-        # epsilon = mac.action_selector.schedule.eval(runner.t_env)
-        # if random.uniform(0, 1) < epsilon * args.sisr_alpha:
-        #     random_spawn = True # random
-        # else:
-        #     random_spawn = False # origin
-        assert args.runner == 'random_episode' # NR 실험중이기 때문
-        
-        clean_flag = np.random.rand(1)[0] > args.nr_alpha
+        assert args.runner in ['random_episode', 'enr_episode', 'episode'] # NR 실험중이기 때문
         
         # Run for a whole episode at a time
-        episode_batch = runner.run(test_mode=False, clean_flag=clean_flag)
-        buffer.insert_episode_batch(episode_batch)
+        if args.runner in ['random_episode', 'enr_episode']:
+            clean_flag = np.random.rand(1)[0] > args.nr_alpha
+            episode_batch = runner.run(test_mode=False, clean_flag=clean_flag)
+
+        elif args.runner == 'sisr_runner':
+            epsilon = mac.action_selector.schedule.eval(runner.t_env)
+            if random.uniform(0, 1) < epsilon * args.sisr_alpha:
+                random_spawn = True # random
+            else:
+                random_spawn = False # origin
+            episode_batch = runner.run(test_mode=False, random_spawn=random_spawn)
+
+        else:
+            episode_batch = runner.run(test_mode=False)
+        
+        
+        if args.runner == 'enr_episode' and not clean_flag:
+            for b in episode_batch: # enr runner는 random_path에 대해 n_ensemble 개의 batch를 반환함
+                buffer.insert_episode_batch(b)
+        else:
+            buffer.insert_episode_batch(episode_batch)
 
         if buffer.can_sample(args.batch_size):
             episode_sample = buffer.sample(args.batch_size)
@@ -188,7 +199,10 @@ def run_sequential(args, logger):
             if episode_sample.device != args.device:
                 episode_sample.to(args.device)
 
-            learner.train(episode_sample, runner.t_env, episode, clean_flag=clean_flag)
+            if args.runner in ['random_episode', 'enr_episode']:
+                learner.train(episode_sample, runner.t_env, episode, clean_flag=clean_flag)
+            else:
+                learner.train(episode_sample, runner.t_env, episode)
 
         # Execute test runs once in a while
         n_test_runs = max(1, args.test_nepisode // runner.batch_size)

@@ -4,7 +4,7 @@ from components.episode_buffer import EpisodeBatch
 import numpy as np
 
 
-class EpisodeRunner:
+class ENREpisodeRunner:
 
     def __init__(self, args, logger):
         self.args = args
@@ -40,13 +40,17 @@ class EpisodeRunner:
     def close_env(self):
         self.env.close()
 
-    def reset(self):
-        self.batch = self.new_batch()
+    def reset(self, clean_flag):
+        if clean_flag:
+            self.batches = [self.new_batch()]
+        else:
+            self.batches = [self.new_batch() for _ in range(self.args.n_ensemble)]
         self.env.reset()
         self.t = 0
 
-    def run(self, test_mode=False):
-        self.reset()
+    def run(self, test_mode=False, clean_flag=True):
+        
+        self.reset(clean_flag)
 
         terminated = False
         episode_return = 0
@@ -60,11 +64,11 @@ class EpisodeRunner:
                 "obs": [self.env.get_obs()]
             }
 
-            self.batch.update(pre_transition_data, ts=self.t)
+            self.batches.update(pre_transition_data, ts=self.t)
 
             # Pass the entire batch of experiences up till now to the agents
             # Receive the actions for each agent at this timestep in a batch of size 1
-            actions = self.mac.select_actions(self.batch, t_ep=self.t, t_env=self.t_env, test_mode=test_mode)
+            actions = self.mac.select_actions(clean_flag, self.batches, t_ep=self.t, t_env=self.t_env, test_mode=test_mode)
 
             reward, terminated, env_info = self.env.step(actions[0])
             episode_return += reward
@@ -75,20 +79,20 @@ class EpisodeRunner:
                 "terminated": [(terminated != env_info.get("episode_limit", False),)],
             }
 
-            self.batch.update(post_transition_data, ts=self.t)
+            self.batches.update(post_transition_data, ts=self.t)
 
             self.t += 1
 
         last_data = {
             "state": [self.env.get_state()],
             "avail_actions": [self.env.get_avail_actions()],
-            "obs": [self.env.get_obs()]
+            "obs": [self.env.get_obs()],
         }
-        self.batch.update(last_data, ts=self.t)
+        self.batches.update(last_data, ts=self.t)
 
         # Select actions in the last stored state
-        actions = self.mac.select_actions(self.batch, t_ep=self.t, t_env=self.t_env, test_mode=test_mode)
-        self.batch.update({"actions": actions}, ts=self.t)
+        actions = self.mac.select_actions(clean_flag, self.batches, t_ep=self.t, t_env=self.t_env, test_mode=test_mode)
+        self.batches.update({"actions": actions}, ts=self.t)
 
         cur_stats = self.test_stats if test_mode else self.train_stats
         cur_returns = self.test_returns if test_mode else self.train_returns
@@ -110,7 +114,7 @@ class EpisodeRunner:
                 self.logger.log_stat("epsilon", self.mac.action_selector.epsilon, self.t_env)
             self.log_train_stats_t = self.t_env
 
-        return self.batch
+        return self.batches
 
     def _log(self, returns, stats, prefix):
         self.logger.log_stat(prefix + "return_mean", np.mean(returns), self.t_env)
