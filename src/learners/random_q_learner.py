@@ -47,10 +47,10 @@ class RandomQLearner:
         mac_out, hiddens, clean_hiddens = [], [], []
         self.mac.init_hidden(batch.batch_size)
         for t in range(batch.max_seq_length):
-            agent_outs, hidden, clean_hidden = self.mac.forward(clean_flag, batch, t=t)
+            agent_outs = self.mac.forward(clean_flag, batch, t=t)
             mac_out.append(agent_outs)
-            hiddens.append(hidden)
-            clean_hiddens.append(clean_hidden)
+            hiddens.append(self.mac.hidden_states)
+            clean_hiddens.append(self.mac.clean_hidden_states)
         mac_out = th.stack(mac_out, dim=1)  # Concat over time
         hiddens = th.stack(hiddens, dim=1)[:, :-1]
         clean_hiddens = th.stack(clean_hiddens, dim=1)[:, :-1] # 왠지는 모르겠는데, 마지막 timestep 지우는게 관례인 듯 하다.
@@ -62,7 +62,7 @@ class RandomQLearner:
         target_mac_out = []
         self.target_mac.init_hidden(batch.batch_size)
         for t in range(batch.max_seq_length):
-            target_agent_outs, _, _ = self.target_mac.forward(clean_flag, batch, t=t)
+            target_agent_outs = self.target_mac.forward(clean_flag, batch, t=t)
             target_mac_out.append(target_agent_outs)
 
         # We don't need the first timesteps Q-Value estimate for calculating targets

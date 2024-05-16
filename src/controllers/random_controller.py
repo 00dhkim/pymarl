@@ -20,15 +20,31 @@ class RandomMAC:
     def select_actions(self, clean_flag, ep_batch, t_ep, t_env, bs=slice(None), test_mode=False):
         # Only select actions for the selected batch elements in bs
         avail_actions = ep_batch["avail_actions"][:, t_ep]
-        agent_outputs, _, _ = self.forward(clean_flag, ep_batch, t_ep, test_mode=test_mode)
+        agent_outputs = self.forward(clean_flag, ep_batch, t_ep, test_mode=test_mode)
         chosen_actions = self.action_selector.select_action(agent_outputs[bs], avail_actions[bs], t_env, test_mode=test_mode)
         return chosen_actions
 
     def forward(self, clean_flag, ep_batch, t, test_mode=False):
         agent_inputs = self._build_inputs(ep_batch, t)
         avail_actions = ep_batch["avail_actions"][:, t]
-        agent_outs, self.hidden_states = self.agent(False, agent_inputs, self.hidden_states)
-        clean_agent_outs, self.clean_hidden_states = self.agent(True, agent_inputs, self.hidden_states)
+        
+        # fm_loss를 계산하기 위해 clean_path, random_path 각각의 hidden feature를 구할 필요가 있음.
+        # 그렇기에 둘 다 실행하는 것.
+        clean_agent_outs, self.clean_hidden_states = self.agent(True, agent_inputs, self.clean_hidden_states, idx_mc=0)
+        
+        agent_outs = []
+        hidden_states = []
+        for idx_mc in range(self.args.mc_approx):
+            curr_agent_outs, curr_hidden_states = self.agent(False, agent_inputs, self.hidden_states, idx_mc=idx_mc)
+            agent_outs.append(curr_agent_outs)
+            hidden_states.append(curr_hidden_states)
+        # 적당히 평균하여 aggregate
+        agent_outs = th.stack(agent_outs)
+        agent_outs = agent_outs.mean(dim=0)
+        hidden_states = th.stack(hidden_states)
+        self.hidden_states = hidden_states.mean(dim=0) # hidden state 정보를 평균하는 것으로 aggregate하는 것이 올바른지 아무도 모름. 판단 필요.
+        assert agent_outs.shape == clean_agent_outs.shape
+        assert self.hidden_states.shape == self.clean_hidden_states.shape
         
         if clean_flag:
             agent_outs = clean_agent_outs
@@ -58,7 +74,7 @@ class RandomMAC:
                     # Zero out the unavailable actions
                     agent_outs[reshaped_avail_actions == 0] = 0.0
 
-        return agent_outs.view(ep_batch.batch_size, self.n_agents, -1), self.hidden_states, self.clean_hidden_states
+        return agent_outs.view(ep_batch.batch_size, self.n_agents, -1)
 
     def init_hidden(self, batch_size):
         self.hidden_states = self.agent.init_hidden().unsqueeze(0).expand(batch_size, self.n_agents, -1)  # bav

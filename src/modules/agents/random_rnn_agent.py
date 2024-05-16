@@ -8,8 +8,9 @@ class RandomRNNAgent(nn.Module):
         super(RandomRNNAgent, self).__init__()
         self.args = args
         self.input_shape = input_shape
+        self.mc_approx = args.mc_approx
 
-        self.random_layer = None
+        self.random_layers = [None] * self.mc_approx
         self.fc1 = nn.Linear(input_shape, args.rnn_hidden_dim)
         self.rnn = nn.GRUCell(args.rnn_hidden_dim, args.rnn_hidden_dim)
         self.fc2 = nn.Linear(args.rnn_hidden_dim, args.n_actions)
@@ -20,13 +21,14 @@ class RandomRNNAgent(nn.Module):
     
     # initialized every peisode
     def init_random_layer(self):
-        self.random_layer = torch.diag(torch.FloatTensor(self.input_shape).uniform_(0.8, 1.2)).to(self.fc1.weight.device)
+        for i in range(self.mc_approx):
+            self.random_layers[i] = torch.diag(torch.FloatTensor(self.input_shape).uniform_(self.args.uniform_matrix_start, self.args.uniform_matrix_end)).to(self.fc1.weight.device)
 
-    def forward(self, clean_flag, inputs, hidden_state):
+    def forward(self, clean_flag, inputs, hidden_state, idx_mc):
         
         if not clean_flag:
             clean_inputs = inputs
-            inputs = torch.matmul(inputs, self.random_layer)
+            inputs = torch.matmul(inputs, self.random_layers[idx_mc])
             assert inputs.shape == clean_inputs.shape
         
         x = F.relu(self.fc1(inputs))
@@ -35,4 +37,3 @@ class RandomRNNAgent(nn.Module):
         q = self.fc2(h)
         
         return q, h
-
