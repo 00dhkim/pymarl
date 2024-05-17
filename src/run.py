@@ -94,6 +94,7 @@ def run_sequential(args, logger):
         "avail_actions": {"vshape": (env_info["n_actions"],), "group": "agents", "dtype": th.int},
         "reward": {"vshape": (1,)},
         "terminated": {"vshape": (1,), "dtype": th.uint8},
+        "seed": {"vshape": (1,), "dtype": th.int, "episode_const": True},
     }
     groups = {
         "agents": args.n_agents
@@ -200,7 +201,7 @@ def run_sequential(args, logger):
                 episode_sample.to(args.device)
 
             if args.runner in ['random_episode', 'enr_episode']:
-                learner.train(episode_sample, runner.t_env, episode, clean_flag=clean_flag)
+                learner.train(clean_flag, episode_sample, runner.t_env, episode)
             else:
                 learner.train(episode_sample, runner.t_env, episode)
 

@@ -6,7 +6,7 @@ import torch as th
 from torch.optim import RMSprop
 
 
-class RandomQLearner:
+class ENRQLearner:
     def __init__(self, mac, scheme, logger, args):
         self.args = args
         self.mac = mac
@@ -34,7 +34,7 @@ class RandomQLearner:
 
         self.log_stats_t = -self.args.learner_log_interval - 1
 
-    def train(self, clean_flag, batch: EpisodeBatch, t_env: int, episode_num: int):
+    def train(self, batch: EpisodeBatch, t_env: int, episode_num: int):
         # Get the relevant quantities
         rewards = batch["reward"][:, :-1]
         actions = batch["actions"][:, :-1]
@@ -42,12 +42,13 @@ class RandomQLearner:
         mask = batch["filled"][:, :-1].float()
         mask[:, 1:] = mask[:, 1:] * (1 - terminated[:, :-1])
         avail_actions = batch["avail_actions"]
+        seed = batch["seed"]
 
         # Calculate estimated Q-Values
         mac_out, hiddens, clean_hiddens = [], [], []
-        self.mac.init_hidden(batch.batch_size)
+        self.mac.init_hidden(batch.batch_size, seed)
         for t in range(batch.max_seq_length):
-            agent_outs = self.mac.forward(clean_flag=clean_flag, ep_batch=batch, t=t)
+            agent_outs = self.mac.forward(clean_flag=True, ep_batch=batch, t=t)
             mac_out.append(agent_outs)
             hiddens.append(self.mac.hidden_states)
             clean_hiddens.append(self.mac.clean_hidden_states)
@@ -60,9 +61,9 @@ class RandomQLearner:
 
         # Calculate the Q-Values necessary for the target
         target_mac_out = []
-        self.target_mac.init_hidden(batch.batch_size)
+        self.target_mac.init_hidden(batch.batch_size, seed)
         for t in range(batch.max_seq_length):
-            target_agent_outs = self.target_mac.forward(clean_flag=clean_flag, ep_batch=batch, t=t)
+            target_agent_outs = self.target_mac.forward(clean_flag=True, ep_batch=batch, t=t)
             target_mac_out.append(target_agent_outs)
 
         # We don't need the first timesteps Q-Value estimate for calculating targets

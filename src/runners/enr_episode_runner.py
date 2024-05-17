@@ -54,7 +54,10 @@ class ENREpisodeRunner:
 
         terminated = False
         episode_return = 0
-        self.mac.init_hidden(batch_size=self.batch_size)
+        seed = np.random.randint(0, 99999) # seed for random layers' initialization
+        self.mac.init_hidden(batch_size=self.batch_size, seed=seed)
+        for b in self.batches:
+            b.update({"seed": seed, "clean_flag": clean_flag})
 
         while not terminated:
 
@@ -64,7 +67,8 @@ class ENREpisodeRunner:
                 "obs": [self.env.get_obs()]
             }
 
-            self.batches.update(pre_transition_data, ts=self.t)
+            for b in self.batches:
+                b.update(pre_transition_data, ts=self.t)
 
             # Pass the entire batch of experiences up till now to the agents
             # Receive the actions for each agent at this timestep in a batch of size 1
@@ -79,7 +83,8 @@ class ENREpisodeRunner:
                 "terminated": [(terminated != env_info.get("episode_limit", False),)],
             }
 
-            self.batches.update(post_transition_data, ts=self.t)
+            for b in self.batches:
+                b.update(post_transition_data, ts=self.t)
 
             self.t += 1
 
@@ -88,7 +93,8 @@ class ENREpisodeRunner:
             "avail_actions": [self.env.get_avail_actions()],
             "obs": [self.env.get_obs()],
         }
-        self.batches.update(last_data, ts=self.t)
+        for b in self.batches:
+            b.update(last_data, ts=self.t)
 
         # Select actions in the last stored state
         actions = self.mac.select_actions(clean_flag, self.batches, t_ep=self.t, t_env=self.t_env, test_mode=test_mode)

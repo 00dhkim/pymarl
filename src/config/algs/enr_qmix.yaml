@@ -30,7 +30,7 @@ name: "qmix"
 runner: "enr_episode"
 mac: "enr_mac"
 agent: "enr_rnn"
-learner: "random_q_learner"
+learner: "enr_q_learner"
 
 nr_alpha: 0.1 # network randomization (clean_flag) coef; 0 is fully clean path; 1.0 is fully random path
 nr_beta: 0.002 # fm_loss coef

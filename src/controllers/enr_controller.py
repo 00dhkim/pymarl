@@ -14,21 +14,42 @@ class ENRMAC:
 
         self.action_selector = action_REGISTRY[args.action_selector](args)
 
-        self.hidden_states = None
+        self.hidden_states_list = [None] * args.mc_approx
         self.clean_hidden_states = None
 
-    def select_actions(self, clean_flag, ep_batch, t_ep, t_env, bs=slice(None), test_mode=False):
+    def select_actions(self, clean_flag, ep_batches, t_ep, t_env, bs=slice(None), test_mode=False): # runner에서만 호출됨
         # Only select actions for the selected batch elements in bs
-        avail_actions = ep_batch["avail_actions"][:, t_ep]
-        agent_outputs = self.forward(clean_flag, ep_batch, t_ep, test_mode=test_mode)
+        avail_actions = ep_batches[0]["avail_actions"][:, t_ep] # avail_actions는 모든 batch가 동일함
+        agent_outputs = self.forward(clean_flag, ep_batches, t_ep, test_mode=test_mode)
+        # 리턴하는 agent_outputs 는 모든 batch를 aggregate한 결과임.
         chosen_actions = self.action_selector.select_action(agent_outputs[bs], avail_actions[bs], t_env, test_mode=test_mode)
         return chosen_actions
 
-    def forward(self, clean_flag, ep_batch, t, test_mode=False):
+    def forward(self, clean_flag, ep_batches, t, test_mode=False):
+        # 학습중이라면 clean_flag == True
+        
+        for idx, ep_batch in enumerate(ep_batches):
+            pass###################################
+        
         agent_inputs = self._build_inputs(ep_batch, t)
         avail_actions = ep_batch["avail_actions"][:, t]
-        agent_outs, self.hidden_states = self.agent(False, agent_inputs, self.hidden_states)
-        clean_agent_outs, self.clean_hidden_states = self.agent(True, agent_inputs, self.clean_hidden_states)
+        
+        # fm_loss를 계산하기 위해 clean_path, random_path 각각의 hidden feature를 구할 필요가 있음.
+        # 그렇기에 둘 다 실행하는 것.
+        clean_agent_outs, self.clean_hidden_states = self.agent(True, agent_inputs, self.clean_hidden_states, idx_mc=0)
+        
+        agent_outs = []
+        hidden_states_list = []
+        for idx_mc in range(self.args.mc_approx):
+            curr_agent_outs, curr_hidden_states = self.agent(False, agent_inputs, self.hidden_states_list[idx_mc], idx_mc=idx_mc)
+            agent_outs.append(curr_agent_outs)
+            hidden_states_list.append(curr_hidden_states)
+        # 적당히 평균하여 aggregate
+        agent_outs = th.stack(agent_outs)
+        agent_outs = agent_outs.mean(dim=0)
+        self.hidden_states_list = hidden_states_list
+        assert agent_outs.shape == clean_agent_outs.shape
+        assert self.hidden_states_list[0].shape == self.clean_hidden_states.shape
         
         if clean_flag:
             agent_outs = clean_agent_outs
@@ -60,10 +81,10 @@ class ENRMAC:
 
         return agent_outs.view(ep_batch.batch_size, self.n_agents, -1)
 
-    def init_hidden(self, batch_size):
-        self.hidden_states = self.agent.init_hidden().unsqueeze(0).expand(batch_size, self.n_agents, -1)  # bav
+    def init_hidden(self, batch_size, seed):
+        self.hidden_states_list = self.agent.init_hidden().unsqueeze(0).expand(batch_size, self.n_agents, -1)  # bav
         self.clean_hidden_states = self.agent.init_hidden().unsqueeze(0).expand(batch_size, self.n_agents, -1)  # bav
-        self.agent.init_random_layer()
+        self.agent.init_random_layer(seed)
 
     def parameters(self):
         return self.agent.parameters()
@@ -108,3 +129,6 @@ class ENRMAC:
             input_shape += self.n_agents
 
         return input_shape
+
+    def forward_random_layer(self):
+        raise NotImplementedError
