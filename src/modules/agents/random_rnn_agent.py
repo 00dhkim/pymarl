@@ -27,7 +27,7 @@ class RandomRNNAgent(nn.Module):
     def forward(self, clean_flag, inputs, hidden_state, idx_mc):
         
         if not clean_flag:
-            clean_inputs = inputs
+            clean_inputs = inputs.clone().detach()
             inputs = torch.matmul(inputs, self.random_layers[idx_mc])
             assert inputs.shape == clean_inputs.shape
         
