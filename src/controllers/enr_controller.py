@@ -26,28 +26,32 @@ class ENRMAC:
         return chosen_actions
 
     def forward(self, clean_flag, ep_batches, t, test_mode=False):
+        """
+        Args:
+            ep_batches: a list of batch
+        Returns:
+            agent_outs: 모델이 생각하는 각 에이전트, 각 action 마다의 q 값 (모든 batch를 aggregate하여 하나만 리턴)
+        - batch 속 obs 정보 사용함.
+        - select_actions 함수 및 learner에서 호출됨
+        """
         # 학습중이라면 clean_flag == True
-        
-        for idx, ep_batch in enumerate(ep_batches):
-            pass###################################
-        
-        agent_inputs = self._build_inputs(ep_batch, t)
-        avail_actions = ep_batch["avail_actions"][:, t]
-        
-        # fm_loss를 계산하기 위해 clean_path, random_path 각각의 hidden feature를 구할 필요가 있음.
-        # 그렇기에 둘 다 실행하는 것.
-        clean_agent_outs, self.clean_hidden_states = self.agent(True, agent_inputs, self.clean_hidden_states, idx_mc=0)
+        assert len(ep_batches) == self.agent.n_random_layer #DEBUG: batch의 개수와 에이전트의 random layer 개수가 항상 같은지?
         
         agent_outs = []
-        hidden_states_list = []
-        for idx_mc in range(self.args.mc_approx):
-            curr_agent_outs, curr_hidden_states = self.agent(False, agent_inputs, self.hidden_states_list[idx_mc], idx_mc=idx_mc)
+        for idx_bat, ep_batch in enumerate(ep_batches):
+            agent_inputs = self._build_inputs(ep_batch, t)
+            avail_actions = ep_batch["avail_actions"][:, t]
+
+            # fm_loss를 계산하기 위해 clean_path, random_path 각각의 hidden feature를 구할 필요가 있음.
+            # 그렇기에 둘 다 실행하는 것.
+            clean_agent_outs, self.clean_hidden_states = self.agent(True, agent_inputs, self.clean_hidden_states, idx_mc=idx_bat)
+            curr_agent_outs, curr_hidden_states = self.agent(False, agent_inputs, self.hidden_states_list[idx_bat], idx_mc=idx_bat)
             agent_outs.append(curr_agent_outs)
-            hidden_states_list.append(curr_hidden_states)
+            self.hidden_states_list[idx_bat] = curr_hidden_states
+        
         # 적당히 평균하여 aggregate
         agent_outs = th.stack(agent_outs)
-        agent_outs = agent_outs.mean(dim=0)
-        self.hidden_states_list = hidden_states_list
+        agent_outs = agent_outs.mean(dim=0) # soft voting
         assert agent_outs.shape == clean_agent_outs.shape
         assert self.hidden_states_list[0].shape == self.clean_hidden_states.shape
         
@@ -58,6 +62,7 @@ class ENRMAC:
 
         # Softmax the agent outputs if they're policy logits
         if self.agent_output_type == "pi_logits":
+            raise NotImplementedError
 
             if getattr(self.args, "mask_before_softmax", True):
                 # Make the logits for unavailable actions very negative to minimise their affect on the softmax
@@ -81,10 +86,11 @@ class ENRMAC:
 
         return agent_outs.view(ep_batch.batch_size, self.n_agents, -1)
 
-    def init_hidden(self, batch_size, seed):
-        self.hidden_states_list = self.agent.init_hidden().unsqueeze(0).expand(batch_size, self.n_agents, -1)  # bav
+    def init_hidden(self, batch_size, seeds):
+        for hidden_states in self.hidden_states_list:
+            hidden_states = self.agent.init_hidden().unsqueeze(0).expand(batch_size, self.n_agents, -1)  # bav
         self.clean_hidden_states = self.agent.init_hidden().unsqueeze(0).expand(batch_size, self.n_agents, -1)  # bav
-        self.agent.init_random_layer(seed)
+        self.agent.init_random_layer(seeds)
 
     def parameters(self):
         return self.agent.parameters()

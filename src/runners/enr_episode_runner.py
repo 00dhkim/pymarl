@@ -44,7 +44,7 @@ class ENREpisodeRunner:
         if clean_flag:
             self.batches = [self.new_batch()]
         else:
-            self.batches = [self.new_batch() for _ in range(self.args.n_ensemble)]
+            self.batches = [self.new_batch() for _ in range(self.args.mc_approx)]
         self.env.reset()
         self.t = 0
 
@@ -54,9 +54,13 @@ class ENREpisodeRunner:
 
         terminated = False
         episode_return = 0
-        seed = np.random.randint(0, 99999) # seed for random layers' initialization
-        self.mac.init_hidden(batch_size=self.batch_size, seed=seed)
-        for b in self.batches:
+        # seed for random layers' initialization
+        if clean_flag:
+            seeds = [np.random.randint(0, 99999)]
+        else:
+            seeds = [np.random.randint(0, 99999) for _ in range(self.args.mc_approx)]
+        self.mac.init_hidden(batch_size=self.batch_size, seeds=seeds)
+        for b, seed in zip(self.batches, seeds):
             b.update({"seed": seed, "clean_flag": clean_flag})
 
         while not terminated:
@@ -98,7 +102,8 @@ class ENREpisodeRunner:
 
         # Select actions in the last stored state
         actions = self.mac.select_actions(clean_flag, self.batches, t_ep=self.t, t_env=self.t_env, test_mode=test_mode)
-        self.batches.update({"actions": actions}, ts=self.t)
+        for b in self.batches:
+            b.update({"actions": actions}, ts=self.t)
 
         cur_stats = self.test_stats if test_mode else self.train_stats
         cur_returns = self.test_returns if test_mode else self.train_returns

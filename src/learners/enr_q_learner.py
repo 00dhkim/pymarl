@@ -46,9 +46,9 @@ class ENRQLearner:
 
         # Calculate estimated Q-Values
         mac_out, hiddens, clean_hiddens = [], [], []
-        self.mac.init_hidden(batch.batch_size, seed)
+        self.mac.init_hidden(batch.batch_size, seeds=[seed])
         for t in range(batch.max_seq_length):
-            agent_outs = self.mac.forward(clean_flag=True, ep_batch=batch, t=t)
+            agent_outs = self.mac.forward(clean_flag=True, ep_batch=[batch], t=t)
             mac_out.append(agent_outs)
             hiddens.append(self.mac.hidden_states)
             clean_hiddens.append(self.mac.clean_hidden_states)
@@ -61,9 +61,9 @@ class ENRQLearner:
 
         # Calculate the Q-Values necessary for the target
         target_mac_out = []
-        self.target_mac.init_hidden(batch.batch_size, seed)
+        self.target_mac.init_hidden(batch.batch_size, seeds=[seed])
         for t in range(batch.max_seq_length):
-            target_agent_outs = self.target_mac.forward(clean_flag=True, ep_batch=batch, t=t)
+            target_agent_outs = self.target_mac.forward(clean_flag=True, ep_batch=[batch], t=t)
             target_mac_out.append(target_agent_outs)
 
         # We don't need the first timesteps Q-Value estimate for calculating targets
@@ -123,6 +123,7 @@ class ENRQLearner:
             self.logger.log_stat("td_error_abs", (masked_td_error.abs().sum().item()/mask_elems), t_env)
             self.logger.log_stat("q_taken_mean", (chosen_action_qvals * mask).sum().item()/(mask_elems * self.args.n_agents), t_env)
             self.logger.log_stat("target_mean", (targets * mask).sum().item()/(mask_elems * self.args.n_agents), t_env)
+            self.logger.log_stat("fm_loss", fm_loss.item(), t_env)
             self.log_stats_t = t_env
 
     def _update_targets(self):
