@@ -95,6 +95,7 @@ def run_sequential(args, logger):
         "reward": {"vshape": (1,)},
         "terminated": {"vshape": (1,), "dtype": th.uint8},
         "seed": {"vshape": (1,), "dtype": th.int, "episode_const": True},
+        "clean_flag": {"vshape": (1,), "dtype": th.bool, "episode_const": True},
     }
     groups = {
         "agents": args.n_agents
@@ -187,6 +188,8 @@ def run_sequential(args, logger):
         if args.runner == 'enr_episode' and not clean_flag:
             for b in episode_batch: # enr runner는 random_path에 대해 n_ensemble 개의 batch를 반환함
                 buffer.insert_episode_batch(b)
+        elif args.runner == 'enr_episode' and clean_flag:
+            buffer.insert_episode_batch(episode_batch[0])
         else:
             buffer.insert_episode_batch(episode_batch)
 
@@ -201,6 +204,8 @@ def run_sequential(args, logger):
                 episode_sample.to(args.device)
 
             if args.runner in ['random_episode', 'enr_episode']:
+                if args.clean_path_when_learning:
+                    clean_flag = True
                 learner.train(clean_flag, episode_sample, runner.t_env, episode)
             else:
                 learner.train(episode_sample, runner.t_env, episode)

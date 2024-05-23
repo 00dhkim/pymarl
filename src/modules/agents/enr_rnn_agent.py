@@ -10,10 +10,9 @@ class ENRRNNAgent(nn.Module):
         self.args = args
         self.input_shape = input_shape
         self.mc_approx = args.mc_approx
-        self.g = torch.Generator(device=args.device)
         self.n_random_layer = 0
 
-        self.random_layers = [None] * self.mc_approx
+        self.random_layers = [None] * max(self.mc_approx, args.batch_size) # mc_approx는 runner에서, batch_size는 learner에서 필요로 하는 개수임.
         self.fc1 = nn.Linear(input_shape, args.rnn_hidden_dim)
         self.rnn = nn.GRUCell(args.rnn_hidden_dim, args.rnn_hidden_dim)
         self.fc2 = nn.Linear(args.rnn_hidden_dim, args.n_actions)
@@ -23,12 +22,12 @@ class ENRRNNAgent(nn.Module):
         return self.fc1.weight.new(1, self.args.rnn_hidden_dim).zero_()
     
     # initialized every peisode
-    def init_random_layer(self, seeds: List[int]):
+    def init_random_layer(self, seeds: List[int], g: torch.Generator):
         # clean_flag일 떄에는 seed 하나만 주어짐
-        self.n_random_layer = min(self.mc_approx, len(seeds))
-        for i, seed in zip(range(self.mc_approx), seeds):
-            self.g.manual_seed(seed)
-            self.random_layers[i] = torch.diag(torch.FloatTensor(self.input_shape).uniform_(self.args.uniform_matrix_start, self.args.uniform_matrix_end, generator=self.g)).to(self.fc1.weight.device)
+        self.n_random_layer = len(seeds)
+        for i, seed in enumerate(seeds):
+            g.manual_seed(seed)
+            self.random_layers[i] = torch.diag(torch.FloatTensor(self.input_shape).uniform_(self.args.uniform_matrix_start, self.args.uniform_matrix_end, generator=g)).to(self.fc1.weight.device)
 
     def forward(self, clean_flag, inputs, hidden_state, idx_mc):
         

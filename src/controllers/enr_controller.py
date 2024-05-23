@@ -1,6 +1,9 @@
+from typing import List
 from modules.agents import REGISTRY as agent_REGISTRY
 from components.action_selectors import REGISTRY as action_REGISTRY
 import torch as th
+
+from components.episode_buffer import EpisodeBatch
 
 
 # This multi-agent controller shares parameters between agents
@@ -14,10 +17,10 @@ class ENRMAC:
 
         self.action_selector = action_REGISTRY[args.action_selector](args)
 
-        self.hidden_states_list = [None] * args.mc_approx
+        self.hidden_states_list = [None] * max(args.mc_approx, args.batch_size)
         self.clean_hidden_states = None
 
-    def select_actions(self, clean_flag, ep_batches, t_ep, t_env, bs=slice(None), test_mode=False): # runner에서만 호출됨
+    def select_actions(self, clean_flag, ep_batches: List[EpisodeBatch], t_ep, t_env, bs=slice(None), test_mode=False): # runner에서만 호출됨
         # Only select actions for the selected batch elements in bs
         avail_actions = ep_batches[0]["avail_actions"][:, t_ep] # avail_actions는 모든 batch가 동일함
         agent_outputs = self.forward(clean_flag, ep_batches, t_ep, test_mode=test_mode)
@@ -25,7 +28,7 @@ class ENRMAC:
         chosen_actions = self.action_selector.select_action(agent_outputs[bs], avail_actions[bs], t_env, test_mode=test_mode)
         return chosen_actions
 
-    def forward(self, clean_flag, ep_batches, t, test_mode=False):
+    def forward(self, clean_flag, ep_batches: List[EpisodeBatch], t, test_mode=False):
         """
         Args:
             ep_batches: a list of batch
@@ -35,16 +38,27 @@ class ENRMAC:
         - select_actions 함수 및 learner에서 호출됨
         """
         # 학습중이라면 clean_flag == True
-        assert len(ep_batches) == self.agent.n_random_layer #DEBUG: batch의 개수와 에이전트의 random layer 개수가 항상 같은지?
+        
+        #DEBUG: batch의 개수와 에이전트의 random layer 개수가 항상 같은지?
+        if isinstance(ep_batches, EpisodeBatch):
+            assert ep_batches.batch_size == self.agent.n_random_layer, f"{ep_batches.batch_size}, {self.agent.n_random_layer}"
+        else:
+            assert len(ep_batches) == self.agent.n_random_layer, f"{len(ep_batches)}, {self.agent.n_random_layer}"
         
         agent_outs = []
-        for idx_bat, ep_batch in enumerate(ep_batches):
+        if isinstance(ep_batches, EpisodeBatch):
+            batch_size = ep_batches.batch_size
+        else:
+            batch_size = len(ep_batches)
+        
+        for idx_bat in range(batch_size):
+            ep_batch = ep_batches[idx_bat]
             agent_inputs = self._build_inputs(ep_batch, t)
             avail_actions = ep_batch["avail_actions"][:, t]
 
             # fm_loss를 계산하기 위해 clean_path, random_path 각각의 hidden feature를 구할 필요가 있음.
             # 그렇기에 둘 다 실행하는 것.
-            clean_agent_outs, self.clean_hidden_states = self.agent(True, agent_inputs, self.clean_hidden_states, idx_mc=idx_bat)
+            clean_agent_outs, self.clean_hidden_states = self.agent(True, agent_inputs, self.clean_hidden_states, idx_mc=idx_bat) #FIXME: 얘가 불필요하게 반복적으로 실행되고 있음. clean_agent_outs는 반복하는 동안 날아감.
             curr_agent_outs, curr_hidden_states = self.agent(False, agent_inputs, self.hidden_states_list[idx_bat], idx_mc=idx_bat)
             agent_outs.append(curr_agent_outs)
             self.hidden_states_list[idx_bat] = curr_hidden_states
@@ -86,11 +100,11 @@ class ENRMAC:
 
         return agent_outs.view(ep_batch.batch_size, self.n_agents, -1)
 
-    def init_hidden(self, batch_size, seeds):
-        for hidden_states in self.hidden_states_list:
-            hidden_states = self.agent.init_hidden().unsqueeze(0).expand(batch_size, self.n_agents, -1)  # bav
+    def init_hidden(self, batch_size, seeds, g):
+        for i in range(len(self.hidden_states_list)):
+            self.hidden_states_list[i] = self.agent.init_hidden().unsqueeze(0).expand(batch_size, self.n_agents, -1)  # bav
         self.clean_hidden_states = self.agent.init_hidden().unsqueeze(0).expand(batch_size, self.n_agents, -1)  # bav
-        self.agent.init_random_layer(seeds)
+        self.agent.init_random_layer(seeds, g)
 
     def parameters(self):
         return self.agent.parameters()

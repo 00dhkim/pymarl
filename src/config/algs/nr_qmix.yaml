@@ -38,6 +38,7 @@ mc_approx: 10
 uniform_matrix_start: 0.8
 uniform_matrix_end: 1.2
 
+clean_path_when_learning: False
 
 # [v] random layer (clean, random path 각각)
 # [v] 에피소드마다 random layer 초기화

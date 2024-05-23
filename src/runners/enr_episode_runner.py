@@ -1,3 +1,4 @@
+import torch
 from envs import REGISTRY as env_REGISTRY
 from functools import partial
 from components.episode_buffer import EpisodeBatch
@@ -25,6 +26,7 @@ class ENREpisodeRunner:
 
         # Log the first run
         self.log_train_stats_t = -1000000
+        self.g = torch.Generator() # 여기서는 cpu, 나중에 cuda로 올림
 
     def setup(self, scheme, groups, preprocess, mac):
         self.new_batch = partial(EpisodeBatch, scheme, groups, self.batch_size, self.episode_limit + 1,
@@ -41,7 +43,7 @@ class ENREpisodeRunner:
         self.env.close()
 
     def reset(self, clean_flag):
-        if clean_flag:
+        if clean_flag or self.args.batch_bundles: #TODO: batch bundles imple.
             self.batches = [self.new_batch()]
         else:
             self.batches = [self.new_batch() for _ in range(self.args.mc_approx)]
@@ -59,9 +61,9 @@ class ENREpisodeRunner:
             seeds = [np.random.randint(0, 99999)]
         else:
             seeds = [np.random.randint(0, 99999) for _ in range(self.args.mc_approx)]
-        self.mac.init_hidden(batch_size=self.batch_size, seeds=seeds)
+        self.mac.init_hidden(batch_size=self.batch_size, seeds=seeds, g=self.g)
         for b, seed in zip(self.batches, seeds):
-            b.update({"seed": seed, "clean_flag": clean_flag})
+            b.update({"seed": [seed], "clean_flag": [clean_flag]})
 
         while not terminated:
 
